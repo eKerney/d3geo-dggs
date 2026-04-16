@@ -16,17 +16,17 @@ export const BaseLayout = () => {
     '', .05, .25, .05, controlsState.rotation, ['slow', '', '', '', 'fast'],
     (e: React.ChangeEvent<HTMLInputElement>) => setControlsState({ ...controlsState, rotation: parseFloat(e.target.value) })],
   [
-    '', 1, 3, 1, controlsState.land, ['land', 'H3', 'A5'],
+    '', 1, 3, 1, controlsState.land, ['Land', 'H3', 'A5'],
     (e: React.ChangeEvent<HTMLInputElement>) => setControlsState({ ...controlsState, land: parseInt(e.target.value) })],
   [
-    '', 1, 3, 1, controlsState.res, [1, 2, 3],
+    '', 1, 3, 1, controlsState.res, ['low', 'med', 'high'],
     (e: React.ChangeEvent<HTMLInputElement>) => setControlsState({ ...controlsState, res: parseInt(e.target.value) })],
   [
     '', 1, 3, 1, controlsState.color, ['grey', 'vir', 'mag'],
     (e: React.ChangeEvent<HTMLInputElement>) => setControlsState({ ...controlsState, color: parseInt(e.target.value) })],
   ];
 
-  useEffect(() => console.log('based', controlsState), [controlsState])
+  // useEffect(() => console.log('based', controlsState), [controlsState])
 
   const globeClickCallback = (
     coords: [number, number] | never[],
