@@ -118,8 +118,8 @@ export const drawGlobe = ({ width, height, svgRef, onGlobeClick, controlsState, 
     .attr('width', width)
     .attr('height', height);
   svg.selectAll('*').remove();
-  const divergingVirdis = (lat: number) => interpolateViridis(1 - (Math.abs(lat) / 56.25));
-  const divergingMagma = (lat: number) => d3.interpolateInferno(1 - (Math.abs(lat) / 56.25));
+  const divergingVirdis = (lat: number) => d3.interpolateViridis(1 - (Math.abs(lat) / 56.25));
+  const divergingMagma = (lat: number) => d3.interpolateMagma(1 - (Math.abs(lat) / 56.25));
 
   const { g, path, projection } = globeSetup({ width, height, radius, svg });
 
@@ -142,7 +142,7 @@ export const drawGlobe = ({ width, height, svgRef, onGlobeClick, controlsState, 
       d3.select(this).attr('data-initial-fill', fillColor);
       return fillColor;
     })
-    .attr('fill-opacity', '0.8')
+    .attr('fill-opacity', '0.7')
     .attr('stroke', 'white')
     .attr('stroke-width', '.5px')
     .attr('stroke-opacity', '0.2')
@@ -276,7 +276,7 @@ export const dataInteractions = (
       d3.select(this)
         // .interrupt()
         .style('filter', 'none')
-        .style('fill-opacity', 0.8)
+        .style('fill-opacity', 0.7)
         .attr('fill', function() {
           return d3.select(this).attr('data-initial-fill') || '#1A1A1A';
         })
