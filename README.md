@@ -1,3 +1,8 @@
+# D3 Geo Globe with H3 & A5 
+Expanding on a visualization experiment from last year: Building a 3D globe with #d3geo - No map library/basemap required! D3 allows complete control of rendering and user interactions, here rendering NaturalEarth land GeoJSON as SVG paths, and retaining feature attributes. What I find even more interesting is that not only can you transform country polygons into #H3geo hexagons, I've now added a transform into #A5geo pentagons, thanks to a suggestion from Felix Palmer,
+
+H3 has a polygonToCells function, though for A5 I've rolled my own highly simplified version: Get centroids for all cells at a given resolution, and use Turf.js pointInPolygon to mark the pentagons for each country. All calculations are live in a client side React App. There are some challenges with losing cells around the anti-meridian, and plenty of upgrades to be made, though you can interact with the globe here: https://ekerney.github.io/d3geo-dggs/
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
@@ -52,5 +57,3 @@ export default tseslint.config({
   },
 })
 ```
-# vite-map-deck
-# https://github.com/eKerney/elevate-spatial-viz.git
