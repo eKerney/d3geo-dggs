@@ -14,6 +14,6 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/setupTests.ts',
   },
-  base: '/vite-map-deck/'
+  base: '/d3geo-dggs/'
 })
 
