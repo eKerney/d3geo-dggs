@@ -154,37 +154,36 @@ export const drawGlobe = ({ width, height, svgRef, onGlobeClick, controlsState, 
     .attr('stroke-width', '0.3px')
     .attr('fill', 'none')
 
-  const satNav = {
-    type: 'FeatureCollection',
-    features: [
-      {
-        type: "Feature",
-        properties: {},
-        geometry: {
-          coordinates: [
-            -70.064617489495504,
-            24.560919506701097,
-            200000
-          ],
-          type: "Point"
-        }
-      }
-    ]
-  }
+  // const satNav = {
+  //   type: 'FeatureCollection',
+  //   features: [
+  //     {
+  //       type: "Feature",
+  //       properties: {},
+  //       geometry: {
+  //         coordinates: [
+  //           -70.064617489495504,
+  //           24.560919506701097,
+  //           200000
+  //         ],
+  //         type: "Point"
+  //       }
+  //     }
+  //   ]
+  // }
 
-  // const path = d3.geoPath(projection); // for SVG
-  const satellites: Feature = g.selectAll('.satellites')
-    .data(satNav.features)
-    .enter()
-    .append('path')
-    .attr('class', 'sattelites')
-    .attr('d', path)
-    .attr('fill', 'purple')
-    .attr('fill-opacity', '0.7')
-    .attr('stroke', 'white')
-    .attr('stroke-width', '1px')
-    .attr('stroke-opacity', '0.2')
-    .attr('height', 10000)
+  // const satellites: Feature = g.selectAll('.satellites')
+  //   .data(satNav.features)
+  //   .enter()
+  //   .append('path')
+  //   .attr('class', 'sattelites')
+  //   .attr('d', path)
+  //   .attr('fill', 'purple')
+  //   .attr('fill-opacity', '0.7')
+  //   .attr('stroke', 'white')
+  //   .attr('stroke-width', '1px')
+  //   .attr('stroke-opacity', '0.2')
+  // .attr('height', 10000)
 
   dataInteractions(features, svg);
   globeInteractions({ width, height, svgRef, onGlobeClick, controlsState, radius, svg, g, projection, path, features, graticules })
