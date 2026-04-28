@@ -2,6 +2,7 @@ import * as d3 from 'd3';
 import { geoOrthographic, geoPath } from 'd3-geo';
 import { D3Features, Dimensions, Feature, GlobeConfig, GlobeState, Polygon, SetupGraphics, } from "./types";
 import { addSatNav } from "./satNavFuncs";
+import { FeatureConfig } from './scratch';
 
 export const drawGlobe = ({
   width,
@@ -88,14 +89,18 @@ export const globeInteractions = ({
   radius,
   svg,
   g,
+  features,
   projection,
   path,
-  features,
   graticules,
   satellites,
   projection2,
   satPath }:
-  WidthHeight & GlobeContexts & SetupGraphics & GlobeState & D3Features) => {
+  Dimensions & GlobeConfig & SetupGraphics & { g: SVGGElement | unknown | null | undefined }
+  & FeatureConfig
+) => {
+
+  // WidthHeight & GlobeContexts & SetupGraphics & GlobeState & D3Features) => {
   // features.data([]).exit().remove(); // Clear data and remove unbound elements
   features.on('click', null);
   // satellites.on('click', null);
