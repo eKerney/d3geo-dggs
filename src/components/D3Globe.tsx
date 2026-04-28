@@ -14,12 +14,16 @@ export const D3Globe = ({ onGlobeClick, controlsState }: D3PanelProps) => {
   const url = 'https://raw.githubusercontent.com/eKerney/vite-map-deck/refs/heads/main/src/data/countries_filtered.geojson';
   const { data } = useFetchData(url);
 
-
   useEffect(() => {
     if (!svgRef.current) return;
-    const hexGeoJSON = getH3GeoJSON(data ? data.features : [], controlsState.res);
-    const a5GeoJSON = getA5GeoJSON(data ? data.features : [], controlsState.res);
-    data && drawGlobe({ width, height, svgRef, onGlobeClick, controlsState, data, hexGeoJSON, a5GeoJSON })
+    const geoJSONfeatures = controlsState.land === 1
+      ? (data ? data.features : [])
+      : controlsState.land === 2
+        ? getH3GeoJSON(data ? data.features : [], controlsState.res).features
+        : getA5GeoJSON(data ? data.features : [], controlsState.res).features;
+    console.log('features', geoJSONfeatures)
+
+    data && drawGlobe({ width, height, svgRef, onGlobeClick, controlsState, geoJSONfeatures })
 
     // cleanup func
     return () => {

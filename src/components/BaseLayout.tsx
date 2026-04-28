@@ -1,8 +1,9 @@
 import { MapViewState } from "deck.gl";
 import { D3Globe, Controls } from "../components"
 import { RefObject, useEffect, useState } from "react";
-import { handleGlobeClick, updateRotationSpeed } from "../utilities/globeFuncs";
+import { updateRotationSpeed } from "../utilities/globeFuncs";
 import { ControlItem, ControlProps } from "./types";
+import { handleGlobeClick } from "../utilities/utilFuncs";
 
 export const BaseLayout = () => {
   const [_viewState, setViewState] = useState<MapViewState>({ longitude: 0, latitude: 0, zoom: 2, pitch: 0, bearing: 0 });
