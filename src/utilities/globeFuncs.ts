@@ -110,6 +110,63 @@ export const drawLines = (
   });
 };
 
+export const addSatNav = (
+  g: SVGGElement | unknown | null | undefined,
+  radius: number,
+  width: number,
+  height: number,
+  svgRef
+) => {
+  console.log('in satnav')
+  const svg = d3.select(svgRef.current)
+    .attr('width', width)
+    .attr('height', height);
+  const projection = geoOrthographic()
+    .scale(radius)
+    .translate([0, 0])
+    .rotate([0, 0])
+    .clipAngle(80);
+
+  const path = geoPath().pointRadius(8).projection(projection);
+
+  const satNav = {
+    type: 'FeatureCollection',
+    features: [
+      {
+        type: "Feature",
+        properties: { id: '001' },
+        geometry: { coordinates: [-70, 24], type: "Point" }
+      },
+      {
+        type: "Feature",
+        properties: { id: '002' },
+        geometry: { coordinates: [70, -24], type: "Point" }
+      },
+      {
+        type: "Feature",
+        properties: { id: '003' },
+        geometry: { coordinates: [-70, -24], type: "Point" }
+      },
+    ]
+  }
+
+  const satellites: Feature = g.selectAll('.satellites')
+    .data(satNav.features)
+    .enter()
+    .append('path')
+    .attr('class', 'satellites')
+    .attr('d', path)
+    .attr('fill', '#bdbdbd')
+    .attr('fill-opacity', '0.7')
+    .attr('stroke', 'white')
+    .attr('stroke-width', '2px')
+    .attr('stroke-opacity', '0.8')
+    .attr('height', 10000)
+
+  dataInteractions(satellites, svg);
+  return { satellites: satNav, projection2: projection, satPath: path };
+}
+
 export const drawGlobe = ({ width, height, svgRef, onGlobeClick, controlsState, data = { features: [] }, hexGeoJSON = { features: [] }, a5GeoJSON }:
   WidthHeight & GlobeContexts & any) => {
   const radius = Math.min(width, height) / 2.4;
@@ -154,39 +211,26 @@ export const drawGlobe = ({ width, height, svgRef, onGlobeClick, controlsState, 
     .attr('stroke-width', '0.3px')
     .attr('fill', 'none')
 
-  // const satNav = {
-  //   type: 'FeatureCollection',
-  //   features: [
-  //     {
-  //       type: "Feature",
-  //       properties: {},
-  //       geometry: {
-  //         coordinates: [
-  //           -70.064617489495504,
-  //           24.560919506701097,
-  //           200000
-  //         ],
-  //         type: "Point"
-  //       }
-  //     }
-  //   ]
-  // }
-
-  // const satellites: Feature = g.selectAll('.satellites')
-  //   .data(satNav.features)
-  //   .enter()
-  //   .append('path')
-  //   .attr('class', 'sattelites')
-  //   .attr('d', path)
-  //   .attr('fill', 'purple')
-  //   .attr('fill-opacity', '0.7')
-  //   .attr('stroke', 'white')
-  //   .attr('stroke-width', '1px')
-  //   .attr('stroke-opacity', '0.2')
-  // .attr('height', 10000)
+  const { satellites, projection2, satPath } = addSatNav(g, radius * 1.5, width, height, svgRef);
 
   dataInteractions(features, svg);
-  globeInteractions({ width, height, svgRef, onGlobeClick, controlsState, radius, svg, g, projection, path, features, graticules })
+  globeInteractions({
+    width,
+    height,
+    svgRef,
+    onGlobeClick,
+    controlsState,
+    radius,
+    svg,
+    g,
+    projection,
+    path,
+    features,
+    graticules,
+    satellites,
+    projection2,
+    satPath
+  })
 
 };
 
@@ -200,23 +244,27 @@ let rotationLambda = 0;
 let rotationPhi = 0;
 let rotationTimer: d3.Timer | null = null;
 
-export const globeInteractions = ({ width, height, svgRef, onGlobeClick, controlsState, radius, svg, g, projection, path, features, graticules }:
+export const globeInteractions = ({
+  width, height, svgRef, onGlobeClick, controlsState, radius, svg, g, projection, path, features, graticules, satellites, projection2, satPath }:
   WidthHeight & GlobeContexts & SetupGraphics & GlobeState & D3Features) => {
   // features.data([]).exit().remove(); // Clear data and remove unbound elements
   features.on('click', null);
+  // satellites.on('click', null);
 
   // Rotation state
   let lambda = 0, phi = 0, timer: d3.Timer | null = null;
   const updateRotation = (newSpeed: number) => {
-    if (rotationTimer) rotationTimer.stop();  // Stop OLD timer
+    if (rotationTimer) rotationTimer.stop();
     rotationLambda = 0;  // Reset rotation
     rotationPhi = 0;
     rotationTimer = d3.timer(() => {
       rotationLambda += newSpeed;
       projection.rotate([rotationLambda, rotationPhi]);
+      projection2.rotate([rotationLambda * 3, rotationPhi]);
       features.attr('d', path);
       graticules.attr('d', path);
       g.select('circle').attr('d', path);
+      g.selectAll('.satellites').attr('d', satPath);
     });
   };
 
@@ -275,7 +323,6 @@ export const dataInteractions = (
       if (!isHovered) {
         isHovered = true;
         d3.select(this)
-          // .raise() 
           .interrupt()
           .style('transform', 'scale(1.3)')
           .style('transform-origin', 'center')
