@@ -1,10 +1,16 @@
 import * as d3 from 'd3';
 import { geoOrthographic, geoPath } from 'd3-geo';
-import { D3Features, Feature, GlobeContexts, GlobeState, Polygon, SetupGraphics, WidthHeight } from "./types";
+import { D3Features, Dimensions, Feature, GlobeConfig, GlobeState, Polygon, SetupGraphics, } from "./types";
 import { addSatNav } from "./satNavFuncs";
 
-export const drawGlobe = ({ width, height, svgRef, onGlobeClick, controlsState, geoJSONfeatures = [] }:
-  WidthHeight & GlobeContexts & any) => {
+export const drawGlobe = ({
+  width,
+  height,
+  svgRef,
+  onGlobeClick,
+  controlsState,
+  geoJSONfeatures = []
+}: Dimensions & GlobeConfig & { geoJSONfeatures: Feature[] }) => {
   const radius = Math.min(width, height) / 2.4;
   const svg = d3.select(svgRef.current)
     .attr('width', width)
@@ -67,16 +73,28 @@ export const drawGlobe = ({ width, height, svgRef, onGlobeClick, controlsState, 
 
 export const rotationEvent = d3.dispatch('speedChange');
 
-export const updateRotationSpeed = (newSpeed: number): void => {
-  rotationEvent.call('speedChange', {}, newSpeed);
-}
+export const updateRotationSpeed = (newSpeed: number): void => { rotationEvent.call('speedChange', {}, newSpeed) }
 
 let rotationLambda = 0;
 let rotationPhi = 0;
 let rotationTimer: d3.Timer | null = null;
 
 export const globeInteractions = ({
-  width, height, svgRef, onGlobeClick, controlsState, radius, svg, g, projection, path, features, graticules, satellites, projection2, satPath }:
+  width,
+  height,
+  svgRef,
+  onGlobeClick,
+  controlsState,
+  radius,
+  svg,
+  g,
+  projection,
+  path,
+  features,
+  graticules,
+  satellites,
+  projection2,
+  satPath }:
   WidthHeight & GlobeContexts & SetupGraphics & GlobeState & D3Features) => {
   // features.data([]).exit().remove(); // Clear data and remove unbound elements
   features.on('click', null);
