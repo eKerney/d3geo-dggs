@@ -1,174 +1,17 @@
-import { Dispatch, RefObject, SetStateAction } from "react";
 import * as d3 from 'd3';
 import { geoOrthographic, geoPath } from 'd3-geo';
-import { FlyToInterpolator, MapViewState } from "deck.gl";
-import { D3Features, Feature, GlobeContexts, GlobeState, Polygon, SetupGraphics, WidthHeight } from "./types";
+import { D3Features, Dimensions, Feature, GlobeConfig, GlobeState, Polygon, SetupGraphics, } from "./types";
+import { addSatNav } from "./satNavFuncs";
+import { FeatureConfig } from './scratch';
 
-
-export const handleGlobeClick = (
-  coords: [number, number] | never[],
-  screenPos: [number, number],
-  _svgRef: RefObject<SVGSVGElement | null>,
-  setViewState: Dispatch<SetStateAction<MapViewState>>,
-) => {
-
-  // logic occurs inside of setViewState to ensure viewState is current 
-  const mapPanel = d3.select("#DeckMap")
-  const fLeft = 140, fTop = 0, fWidth = 540, fHeight = 500;
-
-  setViewState(prev => {
-    if (!prev.latitude) {
-      const [startX, startY] = screenPos;
-      mapPanel
-        .style('position', 'absolute')
-        .style('transform', 'scale(0.1)')
-        .style('filter', 'blur(4px)')
-        .style('left', `${startX - 160}px`)
-        .style('top', `${startY - 240}px`)
-        .style('width', `${fWidth}px`)
-        .style('height', `${fHeight}px`)
-        .style('opacity', 0.1)
-        .transition()
-        .duration(1400)
-        .ease(d3.easePoly)
-        .style('transform', 'scale(1.0)')
-        .style('filter', 'blur(0px)')
-        .style('left', `${fLeft}px`)
-        .style('top', `${fTop}px`)
-        .style('width', `${fWidth}px`)
-        .style('height', `${fHeight}px`)
-        .style('opacity', 0.5);
-    } else {
-      mapPanel
-        .style('position', 'absolute')
-        .style('transform', 'scale(0.9)')
-        .style('filter', 'blur(4px)')
-        .style('left', `${fLeft}px`)
-        .style('top', `${fTop}px`)
-        .style('width', `${fWidth}px`)
-        .style('height', `${fHeight}px`)
-        .style('opacity', 0.7)
-        .transition()
-        .duration(2000)
-        .ease(d3.easeCircleOut)
-        .style('transform', 'scale(1.0)')
-        .style('filter', 'blur(0px)') // Start blurred
-        .style('left', `${fLeft}px`)
-        .style('top', `${fTop}px`)
-        .style('width', `${fWidth}px`)
-        .style('height', `${fHeight}px`)
-        .style('opacity', 0.9);
-    }
-    return ({
-      ...prev,
-      latitude: coords[1],
-      longitude: coords[0],
-      zoom: 7,
-      transitionDuration: 2000,
-      transitionInterpolator: new FlyToInterpolator(),
-    })
-  });
-};
-
-export const drawLines = (
-  screenPos: [number, number],
-  dim: { w: number, h: number, l: number, t: number },
-  svgRef: RefObject<SVGSVGElement | null>,
-) => {
-
-  const svg = d3.select(svgRef.current)
-  svg.selectAll(".connecting-line").remove();
-
-  const [globeX, globeY] = screenPos;
-  const cor = 96;
-  const deckCorners = [
-    [dim.l - cor + 4, dim.t + cor / 3], // Top-left
-    [dim.l + dim.w - cor, dim.t + cor / 3], // Top-right
-    [dim.l - cor + 4, dim.t + dim.h + cor / 4], // Bottom-left
-    [dim.l + dim.w - cor, dim.t + dim.h - cor / 2] // Bottom-right
-  ];
-
-  deckCorners.forEach(([deckX, deckY], i) => {
-    const path = svg.append("path")
-      .attr("class", "connecting-line")
-      .attr("d", `M${globeX},${globeY} Q${(globeX + deckX) / 2},${(globeY + deckY) / 2 - 50} ${deckX},${deckY}`)
-      .attr("stroke", "rgba(255, 255, 255, 0.4)")
-      .attr("stroke-width", 2)
-      .attr("filter", "drop-shadow(0px 0px 4px rgba(255,255,255,0.5))")
-      .attr("fill", "none")
-      .style('opacity', 0.3);
-
-    const totalLength = path?.node()?.getTotalLength() ?? '';
-    path
-      .attr("stroke-dasharray", totalLength)
-      .attr("stroke-dashoffset", totalLength)
-      .transition()
-      .duration(1600)
-      .delay(i * 100)
-      .ease(d3.easeQuadOut)
-      .attr("stroke-dashoffset", 0)
-  });
-};
-
-export const addSatNav = (
-  g: SVGGElement | unknown | null | undefined,
-  radius: number,
-  width: number,
-  height: number,
-  svgRef
-) => {
-  console.log('in satnav')
-  const svg = d3.select(svgRef.current)
-    .attr('width', width)
-    .attr('height', height);
-  const projection = geoOrthographic()
-    .scale(radius)
-    .translate([0, 0])
-    .rotate([0, 0])
-    .clipAngle(80);
-
-  const path = geoPath().pointRadius(8).projection(projection);
-
-  const satNav = {
-    type: 'FeatureCollection',
-    features: [
-      {
-        type: "Feature",
-        properties: { id: '001' },
-        geometry: { coordinates: [-70, 24], type: "Point" }
-      },
-      {
-        type: "Feature",
-        properties: { id: '002' },
-        geometry: { coordinates: [70, -24], type: "Point" }
-      },
-      {
-        type: "Feature",
-        properties: { id: '003' },
-        geometry: { coordinates: [-70, -24], type: "Point" }
-      },
-    ]
-  }
-
-  const satellites: Feature = g.selectAll('.satellites')
-    .data(satNav.features)
-    .enter()
-    .append('path')
-    .attr('class', 'satellites')
-    .attr('d', path)
-    .attr('fill', '#bdbdbd')
-    .attr('fill-opacity', '0.7')
-    .attr('stroke', 'white')
-    .attr('stroke-width', '2px')
-    .attr('stroke-opacity', '0.8')
-    .attr('height', 10000)
-
-  dataInteractions(satellites, svg);
-  return { satellites: satNav, projection2: projection, satPath: path };
-}
-
-export const drawGlobe = ({ width, height, svgRef, onGlobeClick, controlsState, data = { features: [] }, hexGeoJSON = { features: [] }, a5GeoJSON }:
-  WidthHeight & GlobeContexts & any) => {
+export const drawGlobe = ({
+  width,
+  height,
+  svgRef,
+  onGlobeClick,
+  controlsState,
+  geoJSONfeatures = []
+}: Dimensions & GlobeConfig & { geoJSONfeatures: Feature[] }) => {
   const radius = Math.min(width, height) / 2.4;
   const svg = d3.select(svgRef.current)
     .attr('width', width)
@@ -178,13 +21,9 @@ export const drawGlobe = ({ width, height, svgRef, onGlobeClick, controlsState, 
   const divergingMagma = (lat: number) => d3.interpolateMagma(1 - (Math.abs(lat) / 56.25));
 
   const { g, path, projection } = globeSetup({ width, height, radius, svg });
-
+  console.log('drawGlobe', geoJSONfeatures)
   const features: Feature = g.selectAll('.land')
-    .data(controlsState.land === 2
-      ? hexGeoJSON.features
-      : controlsState.land === 3
-        ? a5GeoJSON.features
-        : data.features)
+    .data(geoJSONfeatures)
     .enter()
     .append('path')
     .attr('class', 'land')
@@ -231,22 +70,37 @@ export const drawGlobe = ({ width, height, svgRef, onGlobeClick, controlsState, 
     projection2,
     satPath
   })
-
 };
 
 export const rotationEvent = d3.dispatch('speedChange');
 
-export const updateRotationSpeed = (newSpeed: number): void => {
-  rotationEvent.call('speedChange', {}, newSpeed);
-}
+export const updateRotationSpeed = (newSpeed: number): void => { rotationEvent.call('speedChange', {}, newSpeed) }
 
 let rotationLambda = 0;
 let rotationPhi = 0;
 let rotationTimer: d3.Timer | null = null;
 
 export const globeInteractions = ({
-  width, height, svgRef, onGlobeClick, controlsState, radius, svg, g, projection, path, features, graticules, satellites, projection2, satPath }:
-  WidthHeight & GlobeContexts & SetupGraphics & GlobeState & D3Features) => {
+  width,
+  height,
+  svgRef,
+  onGlobeClick,
+  controlsState,
+  radius,
+  svg,
+  g,
+  features,
+  projection,
+  path,
+  graticules,
+  satellites,
+  projection2,
+  satPath }:
+  Dimensions & GlobeConfig & SetupGraphics & { g: SVGGElement | unknown | null | undefined }
+  & FeatureConfig
+) => {
+
+  // WidthHeight & GlobeContexts & SetupGraphics & GlobeState & D3Features) => {
   // features.data([]).exit().remove(); // Clear data and remove unbound elements
   features.on('click', null);
   // satellites.on('click', null);

@@ -3,7 +3,9 @@ import { cellToBoundary, u64ToHex, cellToChildren, cellToLonLat, hexToU64 } from
 import { Geometry, Polygon, Feature } from "./types";
 import { points, polygon } from "@turf/helpers";
 import pointsWithinPolygon from "@turf/points-within-polygon";
-import a5reversed from '../data/reversed.json';
+import { Dispatch, RefObject, SetStateAction } from "react";
+import * as d3 from 'd3';
+import { FlyToInterpolator, MapViewState } from "deck.gl";
 
 const splitAtAntimeridian = (coords: number[][]) => {
   let crossesAntimeridian = false;
@@ -189,3 +191,67 @@ export const a5cellIdsToGeometries = (cellHexIds: string[]) => {
   return geometryArray;
 }
 
+export const handleGlobeClick = (
+  coords: [number, number] | never[],
+  screenPos: [number, number],
+  _svgRef: RefObject<SVGSVGElement | null>,
+  setViewState: Dispatch<SetStateAction<MapViewState>>,
+) => {
+
+  // logic occurs inside of setViewState to ensure viewState is current 
+  const mapPanel = d3.select("#DeckMap")
+  const fLeft = 140, fTop = 0, fWidth = 540, fHeight = 500;
+
+  setViewState(prev => {
+    if (!prev.latitude) {
+      const [startX, startY] = screenPos;
+      mapPanel
+        .style('position', 'absolute')
+        .style('transform', 'scale(0.1)')
+        .style('filter', 'blur(4px)')
+        .style('left', `${startX - 160}px`)
+        .style('top', `${startY - 240}px`)
+        .style('width', `${fWidth}px`)
+        .style('height', `${fHeight}px`)
+        .style('opacity', 0.1)
+        .transition()
+        .duration(1400)
+        .ease(d3.easePoly)
+        .style('transform', 'scale(1.0)')
+        .style('filter', 'blur(0px)')
+        .style('left', `${fLeft}px`)
+        .style('top', `${fTop}px`)
+        .style('width', `${fWidth}px`)
+        .style('height', `${fHeight}px`)
+        .style('opacity', 0.5);
+    } else {
+      mapPanel
+        .style('position', 'absolute')
+        .style('transform', 'scale(0.9)')
+        .style('filter', 'blur(4px)')
+        .style('left', `${fLeft}px`)
+        .style('top', `${fTop}px`)
+        .style('width', `${fWidth}px`)
+        .style('height', `${fHeight}px`)
+        .style('opacity', 0.7)
+        .transition()
+        .duration(2000)
+        .ease(d3.easeCircleOut)
+        .style('transform', 'scale(1.0)')
+        .style('filter', 'blur(0px)') // Start blurred
+        .style('left', `${fLeft}px`)
+        .style('top', `${fTop}px`)
+        .style('width', `${fWidth}px`)
+        .style('height', `${fHeight}px`)
+        .style('opacity', 0.9);
+    }
+    return ({
+      ...prev,
+      latitude: coords[1],
+      longitude: coords[0],
+      zoom: 7,
+      transitionDuration: 2000,
+      transitionInterpolator: new FlyToInterpolator(),
+    })
+  });
+};

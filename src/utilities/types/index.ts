@@ -6,9 +6,15 @@ import * as d3 from 'd3';
 import { RefObject } from "react";
 import { ControlProps } from "../../components/types";
 
-export type WidthHeight = {
-  width: number,
-  height: number,
+export type Dimensions = {
+  width: number
+  height: number
+}
+
+export type FeatureConfig = {
+  features: d3.Selection<SVGPathElement, unknown, SVGGElement, unknown>;
+  path: d3.GeoPath<any, d3.GeoPermissibleObjects>;
+  projection: d3.GeoProjection;
 }
 
 export interface SetupGraphics {
@@ -16,7 +22,7 @@ export interface SetupGraphics {
   svg: d3.Selection<SVGSVGElement | null, unknown, null, undefined>,
 };
 
-export interface GlobeContexts {
+export interface GlobeConfig {
   svgRef: RefObject<SVGSVGElement | null>,
   onGlobeClick: (coords: [number, number] | never[],
     screenPos: [number, number],
