@@ -1,14 +1,15 @@
 import * as d3 from 'd3';
 import { geoOrthographic, geoPath } from 'd3-geo';
-import { Feature } from "./types";
+import { D3Selection } from "./types";
 import { dataInteractions } from './globeFuncs';
+import { RefObject } from 'react';
 
 export const addSatNav = (
   g: SVGGElement | unknown | null | undefined,
   radius: number,
   width: number,
   height: number,
-  svgRef: any,
+  svgRef: RefObject<SVGSVGElement | null>,
 ) => {
   console.log('in satnav')
   const svg = d3.select(svgRef.current)
@@ -43,7 +44,7 @@ export const addSatNav = (
     ]
   }
 
-  const satellites: Feature = g.selectAll('.satellites')
+  const satellites: D3Selection = g.selectAll('.satellites')
     .data(satNav.features)
     .enter()
     .append('path')
@@ -57,6 +58,6 @@ export const addSatNav = (
     .attr('height', 10000)
 
   dataInteractions(satellites, svg);
-  return { satellites: satNav, projection2: projection, satPath: path };
+  return { satellites: satellites, satProjection: projection, satPath: path };
 }
 

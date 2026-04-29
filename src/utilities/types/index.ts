@@ -37,9 +37,7 @@ export interface GlobeState {
   projection: d3.GeoProjection,
 };
 
-export type D3Features = {
-  features: d3.Selection<SVGPathElement, unknown, SVGGElement, unknown>
-};
+export type D3Selection = d3.Selection<SVGPathElement, unknown, SVGGElement, unknown>
 
 export type Position = [number, number, number?];
 
