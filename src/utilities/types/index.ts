@@ -27,10 +27,16 @@ export type D3Elements = {
   g: SVGGElement | unknown | null | undefined;
   svgRef: RefObject<SVGSVGElement | null>;
 };
+
 export type Dimensions = {
   width: number;
   height: number;
   radius: number;
+}
+
+export type CountryFeatureProps = {
+  country?: string;
+  NAME: string;
 }
 
 export type FeatureConfig = {
@@ -38,6 +44,7 @@ export type FeatureConfig = {
   path: d3.GeoPath<any, d3.GeoPermissibleObjects>;
   projection: d3.GeoProjection;
   graticules?: SVGGElement | unknown | null | undefined;
+  rotationFactor?: number;
 }
 
 export interface SetupGraphics {

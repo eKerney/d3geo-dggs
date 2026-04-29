@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import { geoOrthographic, geoPath } from 'd3-geo';
-import { D3Elements, D3Selection, Dimensions, Feature, FeatureConfig, GlobeConfig, GlobeInteractionsConfig, GlobeState, Interactions, Polygon, SetupGraphics, } from "./types";
+import { CountryFeatureProps, D3Elements, D3Selection, Dimensions, Feature, FeatureConfig, GlobeConfig, GlobeInteractionsConfig, GlobeState, Interactions, Polygon, SetupGraphics, } from "./types";
 import { addSatNav } from "./satNavFuncs";
 
 export const drawGlobe = ({
@@ -50,42 +50,16 @@ export const drawGlobe = ({
     .attr('fill', 'none')
 
 
-  // export interface GlobeInteractionsConfig {
-  //   dimensions: Dimensions;
-  //   d3Elements: D3Elements;
-  //   globeBase: FeatureConfig;
-  //   adjacentFeatures: FeatureConfig;
-  //   interactions: Interactions;
-  // }
   dataInteractions(features, svg);
   const { satellites, satProjection, satPath } = addSatNav(g, radius * 1.5, width, height, svgRef);
+
   globeInteractions({
     dimensions: { width, height, radius },
     d3Elements: { svg, svgRef, g },
     globeBase: { features, path, projection, graticules },
-    adjacentFeatures: { features: satellites, path: satPath, projection: satProjection },
+    adjacentFeatures: { features: satellites, path: satPath, projection: satProjection, rotationFactor: 3 },
     interactions: { onGlobeClick, controlsState }
   });
-
-  // width, height, svgRef, onGlobeClick, controlsState, radius, svg, g, projection, path, features, graticules, selectAll: null })
-
-  // add satellites
-  // const { satellites, satProjection, satPath } = addSatNav(g, radius * 1.5, width, height, svgRef);
-  // globeInteractions({
-  //   width,
-  //   height,
-  //   svgRef,
-  //   onGlobeClick,
-  //   controlsState,
-  //   radius,
-  //   svg,
-  //   g,
-  //   projection: satProjection,
-  //   path: satPath,
-  //   features: satellites,
-  //   graticules,
-  //   selectAll: '.satellites'
-  // })
 };
 
 export const rotationEvent = d3.dispatch('speedChange');
@@ -96,12 +70,10 @@ let rotationLambda = 0;
 let rotationPhi = 0;
 let rotationTimer: d3.Timer | null = null;
 
-export const globeInteractions = ({ dimensions, d3Elements, globeBase, adjacentFeatures, interactions }:
-  GlobeInteractionsConfig
+export const globeInteractions = ({ dimensions, d3Elements, globeBase, adjacentFeatures, interactions }: GlobeInteractionsConfig
 ) => {
   globeBase.features.on('click', null);
   adjacentFeatures.features.on('click', null);
-  // features.on('click', null)
 
   // Rotation state
   let lambda = 0, phi = 0; // timer: d3.Timer | null = null;
@@ -112,12 +84,12 @@ export const globeInteractions = ({ dimensions, d3Elements, globeBase, adjacentF
     rotationTimer = d3.timer(() => {
       rotationLambda += newSpeed;
       globeBase.projection.rotate([rotationLambda, rotationPhi]);
+      adjacentFeatures.projection.rotate([rotationLambda * (adjacentFeatures.rotationFactor ?? 1), rotationPhi]);
       globeBase.features.attr('d', globeBase.path);
+      adjacentFeatures.features.attr('d', adjacentFeatures.path);
       globeBase.graticules.attr('d', globeBase.path);
-      d3Elements.g.select('circle').attr('d', globeBase.path);
-      // selectAll
-      //   ? g.selectAll(selectAll).attr('d', path)
-      //   : g.select('circle').attr('d', path);
+      // d3Elements.g.selectAll('.satellites').attr('d', adjacentFeatures.path)
+      // d3Elements.g.select('circle').attr('d', globeBase.path);
     });
   };
 
@@ -154,11 +126,6 @@ export const globeInteractions = ({ dimensions, d3Elements, globeBase, adjacentF
   d3Elements.svg.call(drag).call(zoom);
   // Initial zoom reset
   d3Elements.svg.call(zoom.transform, d3.zoomIdentity.translate(0, 0).scale(dimensions.radius - 10));
-}
-
-export type CountryFeatureProps = {
-  country?: string;
-  NAME: string;
 }
 
 export const dataInteractions = (
@@ -219,7 +186,9 @@ export const dataInteractions = (
     });
 }
 
-export const globeSetup = ({ width, height, radius, svg }: Dimensions & SetupGraphics): GlobeState => {
+export const globeSetup = ({ width, height, radius, svg }:
+  Dimensions & { svg: d3.Selection<SVGSVGElement | null, unknown, null, undefined> }
+): GlobeState => {
   // Clear previous content
   svg.selectAll('*').remove();
   // Center the globe
