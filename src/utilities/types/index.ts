@@ -6,15 +6,38 @@ import * as d3 from 'd3';
 import { RefObject } from "react";
 import { ControlProps } from "../../components/types";
 
+export interface GlobeInteractionsConfig {
+  dimensions: Dimensions;
+  d3Elements: D3Elements;
+  globeBase: FeatureConfig;
+  adjacentFeatures: FeatureConfig;
+  interactions: Interactions;
+}
+
+export interface Interactions {
+  onGlobeClick: (coords: [number, number] | never[],
+    screenPos: [number, number],
+    svgRef: RefObject<SVGSVGElement | null>,
+  ) => void,
+  controlsState: ControlProps,
+};
+
+export type D3Elements = {
+  svg: d3.Selection<SVGSVGElement | null, unknown, null, undefined>;
+  g: SVGGElement | unknown | null | undefined;
+  svgRef: RefObject<SVGSVGElement | null>;
+};
 export type Dimensions = {
-  width: number
-  height: number
+  width: number;
+  height: number;
+  radius: number;
 }
 
 export type FeatureConfig = {
   features: d3.Selection<SVGPathElement, unknown, SVGGElement, unknown>;
   path: d3.GeoPath<any, d3.GeoPermissibleObjects>;
   projection: d3.GeoProjection;
+  graticules?: SVGGElement | unknown | null | undefined;
 }
 
 export interface SetupGraphics {
