@@ -1,8 +1,7 @@
 import * as d3 from 'd3';
 import { geoOrthographic, geoPath } from 'd3-geo';
-import { D3Features, Dimensions, Feature, GlobeConfig, GlobeState, Polygon, SetupGraphics, } from "./types";
+import { CountryFeatureProps, D3Elements, D3Selection, Dimensions, Feature, FeatureConfig, GlobeConfig, GlobeInteractionsConfig, GlobeState, Interactions, Polygon, SetupGraphics, } from "./types";
 import { addSatNav } from "./satNavFuncs";
-import { FeatureConfig } from './scratch';
 
 export const drawGlobe = ({
   width,
@@ -21,14 +20,14 @@ export const drawGlobe = ({
   const divergingMagma = (lat: number) => d3.interpolateMagma(1 - (Math.abs(lat) / 56.25));
 
   const { g, path, projection } = globeSetup({ width, height, radius, svg });
-  console.log('drawGlobe', geoJSONfeatures)
-  const features: Feature = g.selectAll('.land')
+
+  const features: D3Selection = g.selectAll('.land')
     .data(geoJSONfeatures)
     .enter()
     .append('path')
     .attr('class', 'land')
     .attr('d', path)
-    .attr('fill', function(d) {
+    .attr('fill', function(d: any) {
       const fillColor = controlsState.color === 2
         ? divergingVirdis(d3.geoCentroid(d)[1])
         : controlsState.color === 3
@@ -50,26 +49,17 @@ export const drawGlobe = ({
     .attr('stroke-width', '0.3px')
     .attr('fill', 'none')
 
-  const { satellites, projection2, satPath } = addSatNav(g, radius * 1.5, width, height, svgRef);
 
   dataInteractions(features, svg);
+  const { satellites, satProjection, satPath } = addSatNav(g, radius * 1.5, width, height, svgRef);
+
   globeInteractions({
-    width,
-    height,
-    svgRef,
-    onGlobeClick,
-    controlsState,
-    radius,
-    svg,
-    g,
-    projection,
-    path,
-    features,
-    graticules,
-    satellites,
-    projection2,
-    satPath
-  })
+    dimensions: { width, height, radius },
+    d3Elements: { svg, svgRef, g },
+    globeBase: { features, path, projection, graticules },
+    adjacentFeatures: { features: satellites, path: satPath, projection: satProjection, rotationFactor: controlsState.satSpeed },
+    interactions: { onGlobeClick, controlsState }
+  });
 };
 
 export const rotationEvent = d3.dispatch('speedChange');
@@ -80,51 +70,33 @@ let rotationLambda = 0;
 let rotationPhi = 0;
 let rotationTimer: d3.Timer | null = null;
 
-export const globeInteractions = ({
-  width,
-  height,
-  svgRef,
-  onGlobeClick,
-  controlsState,
-  radius,
-  svg,
-  g,
-  features,
-  projection,
-  path,
-  graticules,
-  satellites,
-  projection2,
-  satPath }:
-  Dimensions & GlobeConfig & SetupGraphics & { g: SVGGElement | unknown | null | undefined }
-  & FeatureConfig
+export const globeInteractions = ({ dimensions, d3Elements, globeBase, adjacentFeatures, interactions }: GlobeInteractionsConfig
 ) => {
-
-  // WidthHeight & GlobeContexts & SetupGraphics & GlobeState & D3Features) => {
-  // features.data([]).exit().remove(); // Clear data and remove unbound elements
-  features.on('click', null);
-  // satellites.on('click', null);
+  globeBase.features.on('click', null);
+  adjacentFeatures.features.on('click', null);
 
   // Rotation state
-  let lambda = 0, phi = 0, timer: d3.Timer | null = null;
+  let lambda = 0, phi = 0; // timer: d3.Timer | null = null;
   const updateRotation = (newSpeed: number) => {
     if (rotationTimer) rotationTimer.stop();
     rotationLambda = 0;  // Reset rotation
     rotationPhi = 0;
     rotationTimer = d3.timer(() => {
+      console.log('in timer, update rotation', interactions.controlsState.satSpeed)
       rotationLambda += newSpeed;
-      projection.rotate([rotationLambda, rotationPhi]);
-      projection2.rotate([rotationLambda * 3, rotationPhi]);
-      features.attr('d', path);
-      graticules.attr('d', path);
-      g.select('circle').attr('d', path);
-      g.selectAll('.satellites').attr('d', satPath);
+      globeBase.projection.rotate([rotationLambda, rotationPhi]);
+      adjacentFeatures.projection.rotate([rotationLambda * (interactions.controlsState.satSpeed), rotationPhi]);
+      globeBase.features.attr('d', globeBase.path);
+      adjacentFeatures.features.attr('d', adjacentFeatures.path);
+      globeBase.graticules.attr('d', globeBase.path);
+      // d3Elements.g.selectAll('.satellites').attr('d', adjacentFeatures.path)
+      // d3Elements.g.select('circle').attr('d', globeBase.path);
     });
   };
 
-  rotationEvent.on('speedChange', null);
+  // rotationEvent.on('speedChange', null);
   rotationEvent.on('speedChange', (newSpeed: number) => updateRotation(newSpeed));
-  updateRotation(controlsState.rotation); //init rotation
+  updateRotation(interactions.controlsState.rotation); //init rotation
 
   // Drag Zoom
   const drag = d3.drag<SVGSVGElement, unknown>()
@@ -132,34 +104,29 @@ export const globeInteractions = ({
       const sensitivity = 0.25;
       rotationLambda += event.dx * sensitivity;
       rotationPhi -= event.dy * sensitivity;
-      projection.rotate([lambda, phi]);
-      features.attr('d', path);
-      g.select('circle').attr('d', path);
+      globeBase.projection.rotate([lambda, phi]);
+      globeBase.features.attr('d', globeBase.path);
+      d3Elements.g.select('circle').attr('d', globeBase.path);
     });
   const zoom = d3.zoom<SVGSVGElement, unknown>()
-    .scaleExtent([radius - 20, radius * 3]) // Min/max zoom levels
+    .scaleExtent([dimensions.radius - 20, dimensions.radius * 3]) // Min/max zoom levels
     .on('zoom', (event) => {
-      projection.scale(event.transform.k);
-      features.attr('d', path);
-      g.select('circle').attr('r', event.transform.k);
-      g.select('.gradient-circle').attr('r', (radius / 1.028) * (event.transform.k / (radius - 10)));
+      globeBase.projection.scale(event.transform.k);
+      globeBase.features.attr('d', globeBase.path);
+      d3Elements.g.select('circle').attr('r', event.transform.k);
+      d3Elements.g.select('.gradient-circle').attr('r', (dimensions.radius / 1.028) * (event.transform.k / (dimensions.radius - 10)));
     });
   // Capture Click for map interaction
-  svg.on('click', (event) => {
-    const [x, y] = d3.pointer(event, svg.node());
-    const coords = 'invert' in projection ? projection.invert!([x - width / 2, y - height / 2]) : [];
-    if (coords) onGlobeClick(coords, [x, y], svgRef);
+  d3Elements.svg.on('click', (event) => {
+    const [x, y] = d3.pointer(event, d3Elements.svg.node());
+    const coords = 'invert' in globeBase.projection ? globeBase.projection.invert!([x - dimensions.width / 2, y - dimensions.height / 2]) : [];
+    if (coords) interactions.onGlobeClick(coords, [x, y], d3Elements.svgRef);
   });
 
   // Apply drag and zoom to SVG
-  svg.call(drag).call(zoom);
+  d3Elements.svg.call(drag).call(zoom);
   // Initial zoom reset
-  svg.call(zoom.transform, d3.zoomIdentity.translate(0, 0).scale(radius - 10));
-}
-
-export type CountryFeatureProps = {
-  country?: string;
-  NAME: string;
+  d3Elements.svg.call(zoom.transform, d3.zoomIdentity.translate(0, 0).scale(dimensions.radius - 10));
 }
 
 export const dataInteractions = (
@@ -205,7 +172,6 @@ export const dataInteractions = (
       const element = this as SVGPathElement;
       hoverState.set(element, false);
       d3.select(this)
-        // .interrupt()
         .style('filter', 'none')
         .style('fill-opacity', 0.7)
         .attr('fill', function() {
@@ -221,7 +187,9 @@ export const dataInteractions = (
     });
 }
 
-export const globeSetup = ({ width, height, radius, svg }: WidthHeight & SetupGraphics): GlobeState => {
+export const globeSetup = ({ width, height, radius, svg }:
+  Dimensions & { svg: d3.Selection<SVGSVGElement | null, unknown, null, undefined> }
+): GlobeState => {
   // Clear previous content
   svg.selectAll('*').remove();
   // Center the globe
@@ -255,12 +223,12 @@ export const globeSetup = ({ width, height, radius, svg }: WidthHeight & SetupGr
     .attr('fill', '#333338')
     .attr('fill-opacity', '0.3')
 
-  globeGradient({ width, height, radius, svg: g });
+  globeGradient({ radius, svg: g });
 
   return { g, path, projection };
 }
 
-export const globeGradient = ({ _width, _height, radius, svg }: WidthHeight & SetupGraphics) => {
+export const globeGradient = ({ radius, svg }: SetupGraphics) => {
   const gradient = svg.append("defs").append("radialGradient")
     .attr("id", "gradient")
     .attr("cx", "75%")

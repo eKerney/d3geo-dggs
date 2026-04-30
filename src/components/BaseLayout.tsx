@@ -7,7 +7,7 @@ import { handleGlobeClick } from "../utilities/utilFuncs";
 
 export const BaseLayout = () => {
   const [_viewState, setViewState] = useState<MapViewState>({ longitude: 0, latitude: 0, zoom: 2, pitch: 0, bearing: 0 });
-  const [controlsState, setControlsState] = useState<ControlProps>({ rotation: .05, land: 1, res: 1, color: 1 });
+  const [controlsState, setControlsState] = useState<ControlProps>({ rotation: .05, land: 1, res: 1, color: 1, satSpeed: 2 });
 
   useEffect(() => {
     updateRotationSpeed(controlsState.rotation);
@@ -27,7 +27,13 @@ export const BaseLayout = () => {
     (e: React.ChangeEvent<HTMLInputElement>) => setControlsState({ ...controlsState, color: parseInt(e.target.value) })],
   ];
 
-  // useEffect(() => console.log('based', controlsState), [controlsState])
+  const satControls: ControlItem[] = [
+    [
+      '', 2, 6, 2, controlsState.satSpeed, ['x2', 'Orb x4', 'x6'],
+      (e: React.ChangeEvent<HTMLInputElement>) => setControlsState({ ...controlsState, satSpeed: parseInt(e.target.value) })],
+  ];
+
+  useEffect(() => console.log('based', controlsState), [controlsState])
 
   const globeClickCallback = (
     coords: [number, number] | never[],
@@ -36,17 +42,40 @@ export const BaseLayout = () => {
   ) => handleGlobeClick(coords, screenPos, svgRef, setViewState);
   return (
     <>
-      <div className="grid grid-cols-12 grid-rows-6 relativ gap-0 h-screen overflow-visible bg-elevation-0   ">
+      <div className="grid grid-cols-12 grid-rows-6  gap-0 h-screen overflow-visible bg-elevation-0   ">
 
         <div className="w-screen col-span-12 justify-center items-center " >
 
           <D3Globe onGlobeClick={globeClickCallback} controlsState={controlsState} />
         </div>
 
-        <div className="absolute top-4 right-4 w-80 p-4  z-50">
+        <div className="fixed top-4 right-0 w-80 p-4  z-50  ">
 
           <Controls
             items={controls}
+            renderItems={(d, i) => (
+              <div key={`${d[0]}-${i}`} className="w-full max-w-xl ">
+                <label className="label"><span className="label-text">{d[0]}</span></label>
+                <input
+                  type="range"
+                  min={d[1]}
+                  max={d[2]}
+                  className="range range-sm range-accent w-full"
+                  step={d[3]}
+                  onChange={d[6]}
+                  value={d[4]}
+                />
+                <div className="flex justify-between px-2.5 mt-2 text-xs">
+                  {d[5].map((e: string | number, i) => <span key={`${e}-${i}`}>{e}</span>)}
+                </div>
+                <hr aria-hidden="true" style={{ visibility: 'hidden', margin: '.3rem 0' }} />
+              </div>
+            )}
+          />
+          <br />
+          <br />
+          <Controls
+            items={satControls}
             renderItems={(d, i) => (
               <div key={`${d[0]}-${i}`} className="w-full max-w-xl ">
                 <label className="label"><span className="label-text">{d[0]}</span></label>

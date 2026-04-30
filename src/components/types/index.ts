@@ -14,6 +14,7 @@ export interface ControlProps {
   land: number,
   res: number,
   color: number,
+  satSpeed: number
 };
 
 export type ControlItem = [string, number, number, number, number, string[] | number[], (e: React.ChangeEvent<HTMLInputElement>) => void];

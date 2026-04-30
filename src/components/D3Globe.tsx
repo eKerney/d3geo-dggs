@@ -21,7 +21,6 @@ export const D3Globe = ({ onGlobeClick, controlsState }: D3PanelProps) => {
       : controlsState.land === 2
         ? getH3GeoJSON(data ? data.features : [], controlsState.res).features
         : getA5GeoJSON(data ? data.features : [], controlsState.res).features;
-    console.log('features', geoJSONfeatures)
 
     data && drawGlobe({ width, height, svgRef, onGlobeClick, controlsState, geoJSONfeatures })
 
@@ -33,7 +32,7 @@ export const D3Globe = ({ onGlobeClick, controlsState }: D3PanelProps) => {
         svg.on('click', null);
       }
     }
-  }, [width, height, data, controlsState.land, controlsState.res, controlsState.color]);
+  }, [width, height, data, controlsState.land, controlsState.res, controlsState.color, controlsState.satSpeed]);
 
   return (
     <div >
