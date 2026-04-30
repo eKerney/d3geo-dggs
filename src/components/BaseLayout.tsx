@@ -49,7 +49,7 @@ export const BaseLayout = () => {
           <D3Globe onGlobeClick={globeClickCallback} controlsState={controlsState} />
         </div>
 
-        <div className="fixed top-4 right-0 w-80 p-4  z-50">
+        <div className="fixed top-4 right-0 w-80 p-4  z-50  ">
 
           <Controls
             items={controls}

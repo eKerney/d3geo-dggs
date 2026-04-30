@@ -82,14 +82,13 @@ export const globeInteractions = ({ dimensions, d3Elements, globeBase, adjacentF
     rotationLambda = 0;  // Reset rotation
     rotationPhi = 0;
     rotationTimer = d3.timer(() => {
-      // console.log('in time, update rotation', adjacentFeatures.rotationFactor)
       console.log('in timer, update rotation', interactions.controlsState.satSpeed)
       rotationLambda += newSpeed;
-      // globeBase.projection.rotate([rotationLambda, rotationPhi]);
+      globeBase.projection.rotate([rotationLambda, rotationPhi]);
       adjacentFeatures.projection.rotate([rotationLambda * (interactions.controlsState.satSpeed), rotationPhi]);
       globeBase.features.attr('d', globeBase.path);
       adjacentFeatures.features.attr('d', adjacentFeatures.path);
-      // globeBase.graticules.attr('d', globeBase.path);
+      globeBase.graticules.attr('d', globeBase.path);
       // d3Elements.g.selectAll('.satellites').attr('d', adjacentFeatures.path)
       // d3Elements.g.select('circle').attr('d', globeBase.path);
     });

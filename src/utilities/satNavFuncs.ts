@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import { geoOrthographic, geoPath } from 'd3-geo';
-import { D3Selection } from "./types";
+import { D3Selection, Feature } from "./types";
 import { dataInteractions } from './globeFuncs';
 import { RefObject } from 'react';
 
@@ -28,43 +28,23 @@ export const addSatNav = (
     features: [
       {
         type: "Feature",
-        properties: { id: '001' },
+        properties: { id: '001', inclination: 45, period: 90, phase: 0 },
         geometry: { coordinates: [-70, 10], type: "Point" }
       },
       {
         type: "Feature",
-        properties: { id: '002' },
+        properties: { id: '002', inclination: 45, period: 90, phase: 0 },
         geometry: { coordinates: [70, 0], type: "Point" }
       },
       {
         type: "Feature",
-        properties: { id: '001' },
+        properties: { id: '003', inclination: 60, period: 90, phase: 0 },
         geometry: { coordinates: [-30, 10], type: "Point" }
       },
       {
         type: "Feature",
-        properties: { id: '002' },
+        properties: { id: '003', inclination: 60, period: 90, phase: 0 },
         geometry: { coordinates: [30, 0], type: "Point" }
-      },
-      {
-        type: "Feature",
-        properties: { id: '001' },
-        geometry: { coordinates: [-100, 10], type: "Point" }
-      },
-      {
-        type: "Feature",
-        properties: { id: '002' },
-        geometry: { coordinates: [100, 0], type: "Point" }
-      },
-      {
-        type: "Feature",
-        properties: { id: '001' },
-        geometry: { coordinates: [-120, 0], type: "Point" }
-      },
-      {
-        type: "Feature",
-        properties: { id: '002' },
-        geometry: { coordinates: [120, 0], type: "Point" }
       },
     ]
   }
@@ -86,3 +66,22 @@ export const addSatNav = (
   return { satellites: satellites, satProjection: projection, satPath: path };
 }
 
+export const updateSatellitePosition = (satellite: Feature, time: number): Feature => {
+  const { inclination, period, phase } = satellite.properties;
+
+  // Calculate current orbital angle
+  const angle = ((time / Number(period)) * 360 + Number(phase)) % 360;
+  const radians = angle * (Math.PI / 180);
+
+  // Calculate new coordinates using orbital mechanics
+  const lat = Math.asin(Math.sin(radians) * Math.sin(Number(inclination) * Math.PI / 180)) * (180 / Math.PI);
+  const lon = Math.atan2(
+    Math.cos(radians) * Math.cos(Number(inclination) * Math.PI / 180),
+    Math.sin(radians)
+  ) * (180 / Math.PI);
+
+  // Update the GeoJSON geometry directly
+  satellite.geometry.coordinates = [lon, lat];
+
+  return satellite;
+};
