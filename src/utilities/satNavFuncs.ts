@@ -29,17 +29,42 @@ export const addSatNav = (
       {
         type: "Feature",
         properties: { id: '001' },
-        geometry: { coordinates: [-70, 24], type: "Point" }
+        geometry: { coordinates: [-70, 10], type: "Point" }
       },
       {
         type: "Feature",
         properties: { id: '002' },
-        geometry: { coordinates: [70, -24], type: "Point" }
+        geometry: { coordinates: [70, 0], type: "Point" }
       },
       {
         type: "Feature",
-        properties: { id: '003' },
-        geometry: { coordinates: [-70, -24], type: "Point" }
+        properties: { id: '001' },
+        geometry: { coordinates: [-30, 10], type: "Point" }
+      },
+      {
+        type: "Feature",
+        properties: { id: '002' },
+        geometry: { coordinates: [30, 0], type: "Point" }
+      },
+      {
+        type: "Feature",
+        properties: { id: '001' },
+        geometry: { coordinates: [-100, 10], type: "Point" }
+      },
+      {
+        type: "Feature",
+        properties: { id: '002' },
+        geometry: { coordinates: [100, 0], type: "Point" }
+      },
+      {
+        type: "Feature",
+        properties: { id: '001' },
+        geometry: { coordinates: [-120, 0], type: "Point" }
+      },
+      {
+        type: "Feature",
+        properties: { id: '002' },
+        geometry: { coordinates: [120, 0], type: "Point" }
       },
     ]
   }

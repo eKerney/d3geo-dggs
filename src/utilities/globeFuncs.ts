@@ -57,7 +57,7 @@ export const drawGlobe = ({
     dimensions: { width, height, radius },
     d3Elements: { svg, svgRef, g },
     globeBase: { features, path, projection, graticules },
-    adjacentFeatures: { features: satellites, path: satPath, projection: satProjection, rotationFactor: 3 },
+    adjacentFeatures: { features: satellites, path: satPath, projection: satProjection, rotationFactor: controlsState.satSpeed },
     interactions: { onGlobeClick, controlsState }
   });
 };
@@ -82,12 +82,14 @@ export const globeInteractions = ({ dimensions, d3Elements, globeBase, adjacentF
     rotationLambda = 0;  // Reset rotation
     rotationPhi = 0;
     rotationTimer = d3.timer(() => {
+      // console.log('in time, update rotation', adjacentFeatures.rotationFactor)
+      console.log('in timer, update rotation', interactions.controlsState.satSpeed)
       rotationLambda += newSpeed;
-      globeBase.projection.rotate([rotationLambda, rotationPhi]);
-      adjacentFeatures.projection.rotate([rotationLambda * (adjacentFeatures.rotationFactor ?? 1), rotationPhi]);
+      // globeBase.projection.rotate([rotationLambda, rotationPhi]);
+      adjacentFeatures.projection.rotate([rotationLambda * (interactions.controlsState.satSpeed), rotationPhi]);
       globeBase.features.attr('d', globeBase.path);
       adjacentFeatures.features.attr('d', adjacentFeatures.path);
-      globeBase.graticules.attr('d', globeBase.path);
+      // globeBase.graticules.attr('d', globeBase.path);
       // d3Elements.g.selectAll('.satellites').attr('d', adjacentFeatures.path)
       // d3Elements.g.select('circle').attr('d', globeBase.path);
     });

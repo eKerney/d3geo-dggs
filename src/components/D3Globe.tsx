@@ -32,7 +32,7 @@ export const D3Globe = ({ onGlobeClick, controlsState }: D3PanelProps) => {
         svg.on('click', null);
       }
     }
-  }, [width, height, data, controlsState.land, controlsState.res, controlsState.color]);
+  }, [width, height, data, controlsState.land, controlsState.res, controlsState.color, controlsState.satSpeed]);
 
   return (
     <div >
