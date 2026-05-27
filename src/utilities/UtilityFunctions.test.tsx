@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { a5cellIdsToGeoJSON, a5cellIdsToGeometries, a5PolygonToCell, getA5GeoJSON, getAllA5centroids } from "./utilFuncs";
 import h3SinglePolyMorocco from '../data/H3moroccoHexFeature.json';
 import { Polygon } from "./types";
-import { polygonToCells } from "a5-js";
+import { polygonToCells, cellToBoundary } from "a5-js";
 
 // describe('test getAllA5centroids', function() {
 //   it('returns valid cellIdHex, centroid at Res0 ', async () => {
@@ -139,7 +139,7 @@ import { polygonToCells } from "a5-js";
 // });
 
 
-describe('test new A5geo polygonToCells function', function() {
+describe('test A5geo polygonToCells with simple hexagon', function() {
   it('returns a', async () => {
     const res = 4;
     const coords = [
@@ -151,20 +151,65 @@ describe('test new A5geo polygonToCells function', function() {
       [-14.570452111245078, 32.95438593767853],
       [-10.744488220052984, 36.383229951792835]
     ];
-    const expected = [
+    const expected = new BigInt64Array([
       6001046503471185920n,
       6010053702725926912n,
       6019060901980667904n,
       6023564501608038400n,
       6037075300490149888n
-    ]
-    // const result = getA5GeoJSON([h3SinglePolyMorocco], res);
-    // console.log('coords', h3SinglePolyMorocco.geometry.coordinates[0]);
+    ]);
     const result = polygonToCells(coords, res)
-    expect(result).toEqual(expect.arrayContaining(expected));
-    // console.log('result', cells)
+    expect([...result]).toEqual([...expected]);
 
   });
 });
 
 
+describe('A5geo cellToBoundary ', function() {
+  it('returns a', async () => {
+    const res = 4;
+    const coords = [
+      [-10.744488220052984, 36.383229951792835],
+      [-5.442348460730093, 35.12442405176797],
+      [-4.341769247156946, 30.69897412778907],
+      [-8.002013895306685, 27.50290866718829],
+      [-12.948554583750909, 28.514935780874872],
+      [-14.570452111245078, 32.95438593767853],
+      [-10.744488220052984, 36.383229951792835]
+    ];
+    const cells = new BigInt64Array([
+      6001046503471185920n,
+      6010053702725926912n,
+      6019060901980667904n,
+      6023564501608038400n,
+      6037075300490149888n
+    ]);
+    const expected = [
+      [-5.845777412874895, 33.34880484292087],
+      [-6.602511865843439, 33.11389028852749],
+      [-7.354707843543338, 32.87465744163976],
+      [-8.10238832653863, 32.63116980799562],
+      [-8.845579709036201, 32.38348979655655],
+      [-8.312049147593939, 31.898235559525475],
+      [-7.790719710755866, 31.408763720093635],
+      [-7.280891519152647, 30.915700802427306],
+      [-6.78189831072018, 30.419584867888304],
+      [-5.997509268266981, 30.43781688347468],
+      [-5.212619792189798, 30.45158429782709],
+      [-4.427232339355896, 30.460888146688568],
+      [-3.641355699946075, 30.465727352728194],
+      [-3.3881156926380527, 31.080045608748378],
+      [-3.134917235551711, 31.692774203106165],
+      [-2.8814023907757473, 32.30385256844998],
+      [-2.6272287171696007, 32.913233804472554],
+      [-3.4274408815372226, 33.029515683188805],
+      [-4.23050170435431, 33.140963220209336],
+      [-5.0365567915848715, 33.24744498903347],
+      [-5.845777412874895, 33.34880484292087]
+    ];
+    const result = cellToBoundary(cells[0]);
+    console.log('boundary', result)
+    expect(result).toEqual(expect.arrayContaining(expected));
+
+  });
+});
