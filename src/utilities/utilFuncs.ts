@@ -1,5 +1,5 @@
 import * as h3 from 'h3-js';
-import { cellToBoundary, u64ToHex, cellToChildren, cellToLonLat, hexToU64, polygonToCells } from "a5-js";
+import { cellToBoundary, u64ToHex, cellToChildren, cellToLonLat, hexToU64, polygonToCells, uncompact } from "a5-js";
 import { Geometry, Polygon, Feature } from "./types";
 import { points, polygon } from "@turf/helpers";
 import pointsWithinPolygon from "@turf/points-within-polygon";
@@ -91,7 +91,6 @@ export const getH3GeoJSON = (geoJSONfeatures: Feature[], res: number) => {
       })
     )
   };
-
 }
 
 export const getA5GeoJSONupdated = (geoJSONfeatures: Feature[], res: number) => {
@@ -107,20 +106,20 @@ export const getA5GeoJSONupdated = (geoJSONfeatures: Feature[], res: number) => 
     try {
       if (geometry.type === 'MultiPolygon') {
         geometry.coordinates.forEach((polygonCoords) => {
-          // pentagons.push(a5PolygonToCell(centroids, polygonCoords));
-          const cellIDints = polygonToCells(polygonCoords[0], adjRes);
-          const hexIDs: string[] = cellIDints.map(d => u64ToHex(d));
+          const compact = polygonToCells(polygonCoords[0], adjRes);
+          const cellIDints = uncompact(compact, adjRes);
+          const hexIDs: string[] = [...cellIDints].map(d => u64ToHex(d));
           pentagons.push(hexIDs);
-          // console.log('polygonCoords', polygonCoords)
-          // console.log('ids', cellIDs)
         });
       } else {
-        // pentagons.push(a5PolygonToCell(centroids, geometry.coordinates));
-        const cellIDints = polygonToCells(geometry.coordinates, adjRes);
-        const hexIDs: string[] = cellIDints.map(d => u64ToHex(d));
+        const compact = polygonToCells(geometry.coordinates[0], adjRes);
+        const cellIDints = uncompact(compact, adjRes);
+        const hexIDs = [...cellIDints].map(d => {
+          return u64ToHex(d)
+        });
         pentagons.push(hexIDs);
       }
-      console.log('pentagons', pentagons)
+      console.log('new', pentagons)
       return { name, pentagons: [...new Set(pentagons)] };
     } catch (error) {
       return { name, pentagons: [] };
@@ -147,7 +146,6 @@ export const getA5GeoJSONupdated = (geoJSONfeatures: Feature[], res: number) => 
 }
 
 export const getA5GeoJSON = (geoJSONfeatures: Feature[], res: number) => {
-  // getA5GeoJSONupdated(geoJSONfeatures, res);
   const centroids = getAllA5centroids(res);
   const a5Countries = geoJSONfeatures.map(country => {
     const geometry = country.geometry;
@@ -165,7 +163,7 @@ export const getA5GeoJSON = (geoJSONfeatures: Feature[], res: number) => {
       } else {
         pentagons.push(a5PolygonToCell(centroids, geometry.coordinates));
       }
-      // console.log('pentagons', pentagons)
+      console.log('old', pentagons)
       return { name, pentagons: [...new Set(pentagons)] };
     } catch (error) {
       return { name, pentagons: [] };
@@ -235,7 +233,6 @@ export const a5PolygonToCell = (centroids: Array<A5Centroid>, polygonGeometry: P
 }
 
 export const a5cellIdsToGeoJSON = (cellHexIds: string[]) => {
-  // console.log('cellHexIds', cellHexIds)
   const geoJSONfeatures: Feature[] = cellHexIds.map((d: string) => {
     const boundary = cellToBoundary(hexToU64(d));
     return {

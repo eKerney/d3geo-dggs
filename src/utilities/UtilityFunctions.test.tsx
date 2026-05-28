@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { a5cellIdsToGeoJSON, a5cellIdsToGeometries, a5PolygonToCell, getA5GeoJSON, getAllA5centroids } from "./utilFuncs";
+import { a5cellIdsToGeoJSON, a5cellIdsToGeometries, a5PolygonToCell, getA5GeoJSON, getA5GeoJSONupdated, getAllA5centroids } from "./utilFuncs";
 import h3SinglePolyMorocco from '../data/H3moroccoHexFeature.json';
 import { Polygon } from "./types";
 import { polygonToCells, cellToBoundary, u64ToHex } from "a5-js";
@@ -217,3 +217,47 @@ describe('A5geo cellToBoundary ', function() {
   });
 });
 
+describe('A5geo cellToBoundary ', function() {
+  it('returns a', async () => {
+    const geoJSONfeatures = [
+      {
+        "type": "Feature",
+        "properties": {
+          "NAME": "Fiji"
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -179.79332,
+                -16.020882
+              ],
+              [
+                -179.917369,
+                -16.501783
+              ],
+              [
+                -180,
+                -16.555217
+              ],
+              [
+                -180,
+                -16.067133
+              ],
+              [
+                -179.79332,
+                -16.020882
+              ]
+            ]
+          ]
+        },
+        "isHovered": true
+      }
+    ];
+    const oldA5GeoJSON = getA5GeoJSON(geoJSONfeatures, 5);
+    const newA5GeoJSON = getA5GeoJSONupdated(geoJSONfeatures, 5);
+    console.log('old featrures', oldA5GeoJSON.features);
+    console.log('new features', newA5GeoJSON.features);
+  });
+});
