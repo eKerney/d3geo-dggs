@@ -82,7 +82,7 @@ export const globeInteractions = ({ dimensions, d3Elements, globeBase, adjacentF
     rotationLambda = 0;  // Reset rotation
     rotationPhi = 0;
     rotationTimer = d3.timer(() => {
-      console.log('in timer, update rotation', interactions.controlsState.satSpeed)
+      // console.log('in timer, update rotation', interactions.controlsState.satSpeed)
       rotationLambda += newSpeed;
       globeBase.projection.rotate([rotationLambda, rotationPhi]);
       adjacentFeatures.projection.rotate([rotationLambda * (interactions.controlsState.satSpeed), rotationPhi]);

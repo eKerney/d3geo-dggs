@@ -1,5 +1,5 @@
 import * as h3 from 'h3-js';
-import { cellToBoundary, u64ToHex, cellToChildren, cellToLonLat, hexToU64 } from "a5-js";
+import { cellToBoundary, u64ToHex, cellToChildren, cellToLonLat, hexToU64, polygonToCells, uncompact } from "a5-js";
 import { Geometry, Polygon, Feature } from "./types";
 import { points, polygon } from "@turf/helpers";
 import pointsWithinPolygon from "@turf/points-within-polygon";
@@ -91,7 +91,58 @@ export const getH3GeoJSON = (geoJSONfeatures: Feature[], res: number) => {
       })
     )
   };
+}
 
+export const getA5GeoJSONupdated = (geoJSONfeatures: Feature[], res: number) => {
+  const adjRes = res + 2;
+  const a5Countries = geoJSONfeatures.map(country => {
+    const geometry: Geometry | null = country.geometry;
+    const name = country.properties.NAME;
+    if (!geometry || !geometry.coordinates) {
+      return { name, pentagons: [] }; // may want to return partially complete pentagons 
+    }
+    let pentagons: string[] = [];
+
+    try {
+      if (geometry.type === 'MultiPolygon') {
+        geometry.coordinates.forEach((polygonCoords) => {
+          const compact = polygonToCells(polygonCoords[0], adjRes);
+          const cellIDints = uncompact(compact, adjRes);
+          const hexIDs: string[] = [...cellIDints].map(d => u64ToHex(d));
+          pentagons.push(hexIDs);
+        });
+      } else {
+        const compact = polygonToCells(geometry.coordinates[0], adjRes);
+        const cellIDints = uncompact(compact, adjRes);
+        const hexIDs = [...cellIDints].map(d => {
+          return u64ToHex(d)
+        });
+        pentagons.push(hexIDs);
+      }
+      console.log('new', pentagons)
+      return { name, pentagons: [...new Set(pentagons)] };
+    } catch (error) {
+      return { name, pentagons: [] };
+    }
+  });
+
+  return {
+    type: 'FeatureCollection',
+    features: a5Countries.flatMap(country =>
+      country?.pentagons?.flatMap(hex => {
+        const boundaries = a5cellIdsToGeometries(hex);
+        const reversedBoundaries = boundaries.map((d: number[][]) => [...d].reverse());
+        return reversedBoundaries.map(boundary => ({
+          type: 'Feature',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [boundary]
+          },
+          properties: { country: country.name }
+        }));
+      })
+    )
+  };
 }
 
 export const getA5GeoJSON = (geoJSONfeatures: Feature[], res: number) => {
@@ -112,6 +163,7 @@ export const getA5GeoJSON = (geoJSONfeatures: Feature[], res: number) => {
       } else {
         pentagons.push(a5PolygonToCell(centroids, geometry.coordinates));
       }
+      console.log('old', pentagons)
       return { name, pentagons: [...new Set(pentagons)] };
     } catch (error) {
       return { name, pentagons: [] };
@@ -160,7 +212,15 @@ export type A5Centroid = {
   centroid: number[];
 }
 
+/**                                                                                                       134,651 tokens
+    * Work around to generate A5 cell IDs from polygon geometries, uses all cell centroids at resolution
+    * Centroids with corresponding cellIDs are pre-generated
+    * @param centroids - ALL A5 centroids for cells at given resolution 
+    * @param polygonGeometry - Single polygon of LonLat coord pairs
+    * @returns Array of string Hex Cell IDs
+*/
 export const a5PolygonToCell = (centroids: Array<A5Centroid>, polygonGeometry: Polygon): Array<string> => {
+  // console.log('polygonGeometry', polygonGeometry)
   const intersections = polygonGeometry.length > 0 ?
     centroids.map((d) => {
       const poly = polygon(polygonGeometry);
@@ -170,7 +230,6 @@ export const a5PolygonToCell = (centroids: Array<A5Centroid>, polygonGeometry: P
       return result?.features[0]?.geometry?.coordinates[0] ? d.cellIdHex : null;
     }) : [];
   return intersections.filter(item => item != null)
-  // return ['5380000000000000'];
 }
 
 export const a5cellIdsToGeoJSON = (cellHexIds: string[]) => {

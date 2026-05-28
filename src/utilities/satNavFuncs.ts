@@ -11,7 +11,6 @@ export const addSatNav = (
   height: number,
   svgRef: RefObject<SVGSVGElement | null>,
 ) => {
-  console.log('in satnav')
   const svg = d3.select(svgRef.current)
     .attr('width', width)
     .attr('height', height);
